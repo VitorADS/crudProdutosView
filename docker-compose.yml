@@ -14,7 +14,9 @@ services:
 
     php-fpm:
         build: phpdocker/php-fpm
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
         working_dir: /application
         volumes:
             - '.:/application/public'
-            - './phpdocker/php-fpm/php-ini-overrides.ini:/etc/php/8.2/fpm/conf.d/99-overrides.ini'
+            - './phpdocker/php-fpm/php-ini-overrides.ini:/etc/php/8.3/fpm/conf.d/99-overrides.ini'
