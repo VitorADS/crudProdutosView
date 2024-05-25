@@ -22,20 +22,19 @@ class ProductController extends AbstractController
     {
     }
 
-    private function getItensFromCache(): array
+    private function getItemsFromCache(): array
     {
         return $this->cache->get(
             'products',
             function (ItemInterface $item){
                 $item->expiresAfter(new \DateInterval('P1D'));
-
                 $response = $this->sendRequest->send(Base::findProducts);
 
                 if($response->getStatusCode() === Response::HTTP_OK) {
                     return $response->toArray();
                 }
 
-                throw new \Exception('Falha ao busca itens!');
+                throw new \Exception('Falha ao buscar itens!');
             }
         );
     }
@@ -45,7 +44,7 @@ class ProductController extends AbstractController
      */
     private function getProductDTO(int $productId): ProductDTO
     {
-        $products = $this->getItensFromCache();
+        $products = $this->getItemsFromCache();
 
         $ids = array_column($products['products'], 'id');
         if($position = array_search($productId, $ids)){
@@ -69,7 +68,7 @@ class ProductController extends AbstractController
     public function index(): Response
     {
         try{
-            $content = $this->getItensFromCache();
+            $content = $this->getItemsFromCache();
 
             return $this->render('product/index.html.twig', [
                 'products' => $content['products'],
