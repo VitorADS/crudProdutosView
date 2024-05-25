@@ -29,27 +29,27 @@ class ProductController extends AbstractController
 
     private function getItemsFromCache(): array
     {
-//        return $this->cache->get(
-//            'products',
-//            function (ItemInterface $item){
-//                $item->expiresAfter(new \DateInterval('PT1S'));
-//                $response = $this->sendRequest->send(Base::FIND_PRODUCTS);
+        return $this->cache->get(
+            'products',
+            function (ItemInterface $item){
+                $item->expiresAfter(new \DateInterval('P1D'));
+                $response = $this->sendRequest->send(Base::FIND_PRODUCTS);
+
+                if($response->getStatusCode() === Response::HTTP_OK) {
+                    return $response->toArray();
+                }
+
+                throw new \Exception('Falha ao buscar itens!');
+            }
+        );
+
+//        $response = $this->sendRequest->send(Base::FIND_PRODUCTS);
 //
-//                if($response->getStatusCode() === Response::HTTP_OK) {
-//                    return $response->toArray();
-//                }
+//        if($response->getStatusCode() === Response::HTTP_OK) {
+//            return $response->toArray();
+//        }
 //
-//                throw new \Exception('Falha ao buscar itens!');
-//            }
-//        );
-
-        $response = $this->sendRequest->send(Base::FIND_PRODUCTS);
-
-        if($response->getStatusCode() === Response::HTTP_OK) {
-            return $response->toArray();
-        }
-
-        throw new \Exception('Falha ao buscar itens!');
+//        throw new \Exception('Falha ao buscar itens!');
     }
 
     /**
