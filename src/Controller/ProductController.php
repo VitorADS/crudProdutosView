@@ -28,7 +28,7 @@ class ProductController extends AbstractController
             'products',
             function (ItemInterface $item){
                 $item->expiresAfter(new \DateInterval('P1D'));
-                $response = $this->sendRequest->send(Base::findProducts);
+                $response = $this->sendRequest->send(Base::FIND_PRODUCTS);
 
                 if($response->getStatusCode() === Response::HTTP_OK) {
                     return $response->toArray();
@@ -95,7 +95,7 @@ class ProductController extends AbstractController
             $productForm->handleRequest($request);
 
             if($productForm->isSubmitted() && $productForm->isValid()) {
-                $response = $this->sendRequest->send(Base::createProduct, $productDTO);
+                $response = $this->sendRequest->send(Base::CREATE_PRODUCT, $productDTO);
 
                 if($response->getStatusCode() === Response::HTTP_CREATED) {
                     $this->addFlash('success', 'Produto criado com sucesso!');
@@ -138,7 +138,7 @@ class ProductController extends AbstractController
             $productForm->handleRequest($request);
 
             if($productForm->isSubmitted() && $productForm->isValid()) {
-                $response = $this->sendRequest->send(Base::updateProduct, $productDTO);
+                $response = $this->sendRequest->send(Base::UPDATE_PRODUCT, $productDTO);
 
                 if($response->getStatusCode() === Response::HTTP_OK) {
                     $this->addFlash('success', 'Produto atualizado com sucesso!');
@@ -172,7 +172,7 @@ class ProductController extends AbstractController
     {
         try{
             $productDTO = $this->getProductDTO($productId);
-            $response = $this->sendRequest->send(Base::deleteProduct, $productDTO);
+            $response = $this->sendRequest->send(Base::DELETE_PRODUCT, $productDTO);
 
             if($response->getStatusCode() === Response::HTTP_OK) {
                 $this->addFlash('success', 'Produto removido com sucesso!');

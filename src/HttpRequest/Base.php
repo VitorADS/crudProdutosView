@@ -14,10 +14,10 @@ abstract class Base implements HttpRequestInterface
     private readonly HttpClientInterface $client;
 
     //EndPoints
-    public const string findProducts = '/api/product';
-    public const string createProduct = '/api/product/create';
-    public const string updateProduct = '/api/product/edit/';
-    public const string deleteProduct = '/api/product/remove/';
+    public const FIND_PRODUCTS = '/api/product';
+    public const CREATE_PRODUCT = '/api/product/create';
+    public const UPDATE_PRODUCT = '/api/product/edit/';
+    public const DELETE_PRODUCT = '/api/product/remove/';
 
     public function __construct()
     {
@@ -31,42 +31,42 @@ abstract class Base implements HttpRequestInterface
     public function sendRequest(string $endPoint, ?ProductDTO $productDTO = null): ResponseInterface
     {
         switch ($endPoint){
-            case self::findProducts:
-                return $this->sendFindProducts();
+            case self::FIND_PRODUCTS:
+                return $this->sendFIND_PRODUCTS();
                 break;
-            case self::createProduct:
-                return $this->sendCreateProduct($productDTO);
+            case self::CREATE_PRODUCT:
+                return $this->sendCREATE_PRODUCT($productDTO);
                 break;
-            case self::updateProduct:
-                return $this->sendUpdateProduct($productDTO);
+            case self::UPDATE_PRODUCT:
+                return $this->sendUPDATE_PRODUCT($productDTO);
                 break;
-            case self::deleteProduct:
+            case self::DELETE_PRODUCT:
                 return $this->sendRemoveProduct($productDTO->getId());
                 break;
         }
     }
 
-    protected function sendFindProducts(): ResponseInterface
+    protected function sendFIND_PRODUCTS(): ResponseInterface
     {
-        return $this->client->request('GET', $this->getUrl() . self::findProducts);
+        return $this->client->request('GET', $this->getUrl() . self::FIND_PRODUCTS);
     }
 
-    protected function sendCreateProduct(ProductDTO $productDTO): ResponseInterface
+    protected function sendCREATE_PRODUCT(ProductDTO $productDTO): ResponseInterface
     {
-        return $this->client->request('POST', $this->getUrl() . self::createProduct, [
+        return $this->client->request('POST', $this->getUrl() . self::CREATE_PRODUCT, [
             'json' => $productDTO
         ]);
     }
 
-    protected function sendUpdateProduct(ProductDTO $productDTO): ResponseInterface
+    protected function sendUPDATE_PRODUCT(ProductDTO $productDTO): ResponseInterface
     {
-        return $this->client->request('PUT', $this->getUrl() . self::updateProduct . $productDTO->getId(), [
+        return $this->client->request('PUT', $this->getUrl() . self::UPDATE_PRODUCT . $productDTO->getId(), [
             'json' => $productDTO
         ]);
     }
 
     protected function sendRemoveProduct(int $idProduct): ResponseInterface
     {
-        return $this->client->request('DELETE', $this->getUrl() . self::deleteProduct . $idProduct);
+        return $this->client->request('DELETE', $this->getUrl() . self::DELETE_PRODUCT . $idProduct);
     }
 }
