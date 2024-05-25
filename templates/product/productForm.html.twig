@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Hello ProductController!{% endblock %}
+{% block title %}{{ app.request.attributes.get('_route') == 'app_product_create' ? 'Criar produto' : 'Editar produto' }}{% endblock %}
 
 {% block body %}
     {{ form(productForm) }}

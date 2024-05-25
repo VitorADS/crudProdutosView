@@ -19,6 +19,7 @@ class ProductType extends AbstractType
         $builder
             ->add('name', TextType::class, [
                 'required' => true,
+                'label' => 'Nome',
                 'invalid_message' => 'Insira um texto!',
                 'constraints' => [
                     new NotBlank([
@@ -28,6 +29,7 @@ class ProductType extends AbstractType
             ])
             ->add('price', NumberType::class, [
                 'required' => true,
+                'label' => 'Preco',
                 'invalid_message' => 'Insira um numero!',
                 'constraints' => [
                     new NotBlank([
@@ -40,6 +42,7 @@ class ProductType extends AbstractType
             ])
             ->add('quantity', IntegerType::class, [
                 'required' => true,
+                'label' => 'Quantidade',
                 'invalid_message' => 'Insira um numero!',
                 'constraints' => [
                     new NotBlank([
@@ -51,7 +54,7 @@ class ProductType extends AbstractType
                 ]
             ])
             ->add('submit', SubmitType::class, [
-                'label' => 'Adicionar',
+                'label' => $options['edit'] ? 'Salvar' : 'Criar',
                 'attr' => [
                     'class' => 'btn-secondary'
                 ]
@@ -62,7 +65,8 @@ class ProductType extends AbstractType
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            'data_class' => ProductDTO::class
+            'data_class' => ProductDTO::class,
+            'edit' => false
         ]);
     }
 }
