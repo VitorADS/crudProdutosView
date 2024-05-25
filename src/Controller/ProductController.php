@@ -12,6 +12,11 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
+use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 
 class ProductController extends AbstractController
 {
@@ -24,19 +29,27 @@ class ProductController extends AbstractController
 
     private function getItemsFromCache(): array
     {
-        return $this->cache->get(
-            'products',
-            function (ItemInterface $item){
-                $item->expiresAfter(new \DateInterval('P1D'));
-                $response = $this->sendRequest->send(Base::FIND_PRODUCTS);
+//        return $this->cache->get(
+//            'products',
+//            function (ItemInterface $item){
+//                $item->expiresAfter(new \DateInterval('PT1S'));
+//                $response = $this->sendRequest->send(Base::FIND_PRODUCTS);
+//
+//                if($response->getStatusCode() === Response::HTTP_OK) {
+//                    return $response->toArray();
+//                }
+//
+//                throw new \Exception('Falha ao buscar itens!');
+//            }
+//        );
 
-                if($response->getStatusCode() === Response::HTTP_OK) {
-                    return $response->toArray();
-                }
+        $response = $this->sendRequest->send(Base::FIND_PRODUCTS);
 
-                throw new \Exception('Falha ao buscar itens!');
-            }
-        );
+        if($response->getStatusCode() === Response::HTTP_OK) {
+            return $response->toArray();
+        }
+
+        throw new \Exception('Falha ao buscar itens!');
     }
 
     /**
