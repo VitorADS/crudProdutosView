@@ -47,7 +47,7 @@ class ProductController extends AbstractController
         $products = $this->getItemsFromCache();
 
         $ids = array_column($products['products'], 'id');
-        if($position = array_search($productId, $ids)){
+        if(($position = array_search($productId, $ids)) !== false){
             $product = $products['products'][$position];
         } else {
             throw new \Exception('Produto nao encontrado!');
@@ -129,7 +129,7 @@ class ProductController extends AbstractController
     {
         try {
             $productDTO = $this->getProductDTO($productId);
-            $productForm = $this->createForm(ProductType::class, $productDTO);
+            $productForm = $this->createForm(ProductType::class, $productDTO, ['edit' => true]);
 
             if($request->getMethod() === Request::METHOD_GET) {
                 return $this->render('product/productForm.html.twig', compact(['productForm']));
