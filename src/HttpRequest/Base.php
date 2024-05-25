@@ -16,6 +16,8 @@ abstract class Base implements HttpRequestInterface
     //EndPoints
     public const string findProducts = '/api/product';
     public const string createProduct = '/api/product/create';
+    public const string updateProduct = '/api/product/edit/';
+    public const string deleteProduct = '/api/product/remove/';
 
     public function __construct()
     {
@@ -26,9 +28,6 @@ abstract class Base implements HttpRequestInterface
         ]);
     }
 
-    /**
-     * @throws TransportExceptionInterface
-     */
     public function sendRequest(string $endPoint, ?ProductDTO $productDTO = null): ResponseInterface
     {
         switch ($endPoint){
@@ -38,12 +37,15 @@ abstract class Base implements HttpRequestInterface
             case self::createProduct:
                 return $this->sendCreateProduct($productDTO);
                 break;
+            case self::updateProduct:
+                return $this->sendUpdateProduct($productDTO);
+                break;
+            case self::deleteProduct:
+                return $this->sendRemoveProduct($productDTO->getId());
+                break;
         }
     }
 
-    /**
-     * @throws TransportExceptionInterface
-     */
     protected function sendFindProducts(): ResponseInterface
     {
         return $this->client->request('GET', $this->getUrl() . self::findProducts);
@@ -54,5 +56,17 @@ abstract class Base implements HttpRequestInterface
         return $this->client->request('POST', $this->getUrl() . self::createProduct, [
             'json' => $productDTO
         ]);
+    }
+
+    protected function sendUpdateProduct(ProductDTO $productDTO): ResponseInterface
+    {
+        return $this->client->request('PUT', $this->getUrl() . self::updateProduct . $productDTO->getId(), [
+            'json' => $productDTO
+        ]);
+    }
+
+    protected function sendRemoveProduct(int $idProduct): ResponseInterface
+    {
+        return $this->client->request('DELETE', $this->getUrl() . self::deleteProduct . $idProduct);
     }
 }

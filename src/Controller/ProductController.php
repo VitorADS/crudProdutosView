@@ -10,16 +10,56 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
-use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
-use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
-use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
-use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
+use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Contracts\Cache\ItemInterface;
 
 class ProductController extends AbstractController
 {
-    public function __construct(private readonly SendRequest $sendRequest)
+    public function __construct(
+        private readonly SendRequest $sendRequest,
+        private readonly CacheInterface $cache
+    )
     {
+    }
+
+    private function getItensFromCache(): array
+    {
+        return $this->cache->get(
+            'products',
+            function (ItemInterface $item){
+                $item->expiresAfter(new \DateInterval('P1D'));
+
+                $response = $this->sendRequest->send(Base::findProducts);
+
+                if($response->getStatusCode() === Response::HTTP_OK) {
+                    return $response->toArray();
+                }
+
+                throw new \Exception('Falha ao busca itens!');
+            }
+        );
+    }
+
+    /**
+     * @throws \Exception
+     */
+    private function getProductDTO(int $productId): ProductDTO
+    {
+        $products = $this->getItensFromCache();
+
+        $ids = array_column($products['products'], 'id');
+        if($position = array_search($productId, $ids)){
+            $product = $products['products'][$position];
+        } else {
+            throw new \Exception('Produto nao encontrado!');
+        }
+
+        return new ProductDTO(
+            $product['id'],
+            $product['name'],
+            $product['price'],
+            $product['quantity']
+        );
     }
 
     /**
@@ -29,11 +69,7 @@ class ProductController extends AbstractController
     public function index(): Response
     {
         try{
-            $response = $this->sendRequest->send(Base::findProducts);
-
-            if($response->getStatusCode() === Response::HTTP_OK) {
-                $content = $response->toArray();
-            }
+            $content = $this->getItensFromCache();
 
             return $this->render('product/index.html.twig', [
                 'products' => $content['products'],
@@ -54,7 +90,7 @@ class ProductController extends AbstractController
             $productForm = $this->createForm(ProductType::class, $productDTO);
 
             if($request->getMethod() === Request::METHOD_GET) {
-                return $this->render('product/create.html.twig', compact(['productForm']));
+                return $this->render('product/productForm.html.twig', compact(['productForm']));
             }
 
             $productForm->handleRequest($request);
@@ -62,8 +98,9 @@ class ProductController extends AbstractController
             if($productForm->isSubmitted() && $productForm->isValid()) {
                 $response = $this->sendRequest->send(Base::createProduct, $productDTO);
 
-                if($response->getStatusCode() === Response::HTTP_OK) {
+                if($response->getStatusCode() === Response::HTTP_CREATED) {
                     $this->addFlash('success', 'Produto criado com sucesso!');
+                    $this->cache->delete('products');
                     return $this->redirectToRoute('app_product_index');
                 }
 
@@ -83,6 +120,71 @@ class ProductController extends AbstractController
 
             $this->addFlash('danger', $error);
             return $this->redirectToRoute('app_product_create');
+        }catch (\Exception $e){
+            throw $e;
+        }
+    }
+
+    #[Route('/edit/{productId}', name: 'app_product_edit', methods: ['GET', 'POST'])]
+    public function edit(Request $request, int $productId): Response
+    {
+        try {
+            $productDTO = $this->getProductDTO($productId);
+            $productForm = $this->createForm(ProductType::class, $productDTO);
+
+            if($request->getMethod() === Request::METHOD_GET) {
+                return $this->render('product/productForm.html.twig', compact(['productForm']));
+            }
+
+            $productForm->handleRequest($request);
+
+            if($productForm->isSubmitted() && $productForm->isValid()) {
+                $response = $this->sendRequest->send(Base::updateProduct, $productDTO);
+
+                if($response->getStatusCode() === Response::HTTP_OK) {
+                    $this->addFlash('success', 'Produto atualizado com sucesso!');
+                    $this->cache->delete('products');
+                    return $this->redirectToRoute('app_product_index');
+                }
+
+                $content = $response->toArray();
+                $message = !empty($content['message']) ? $content['message'] : 'Erro ao editar o produto!';
+                $this->addFlash('danger', $message);
+                return $this->redirectToRoute('app_product_edit', ['productId' => $productId]);
+            }
+
+            $errorForm = $productForm->getErrors(true);
+
+            if(count($errorForm) > 0){
+                $error = (string) $errorForm;
+            } else {
+                $error = 'Nao foi possivel gravar a informacao!';
+            }
+
+            $this->addFlash('danger', $error);
+            return $this->redirectToRoute('app_product_edit', ['productId' => $productId]);
+        }catch (\Exception $e){
+            throw $e;
+        }
+    }
+
+    #[Route('/remove/{productId}', name: 'app_product_remove', methods: ['GET'])]
+    public function remove(Request $request, int $productId): Response
+    {
+        try{
+            $productDTO = $this->getProductDTO($productId);
+            $response = $this->sendRequest->send(Base::deleteProduct, $productDTO);
+
+            if($response->getStatusCode() === Response::HTTP_OK) {
+                $this->addFlash('success', 'Produto removido com sucesso!');
+                $this->cache->delete('products');
+                return $this->redirectToRoute('app_product_index');
+            }
+
+            $content = $response->toArray();
+            $message = !empty($content['message']) ? $content['message'] : 'Erro ao remover o produto!';
+            $this->addFlash('danger', $message);
+            return $this->redirectToRoute('app_product_edit', ['productId' => $productId]);
         }catch (\Exception $e){
             throw $e;
         }
